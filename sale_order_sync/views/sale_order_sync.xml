@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="sale_order_sync_action" model="ir.actions.server">
+            <field name="name">Sale Order Sync Action</field>
+            <field name="model_id" ref="sale.model_sale_order" />
+            <field name="type">ir.actions.server</field>
+            <field name="state">code</field>
+            <field name="code">
+for r in records:
+    r.sync_sale_order()
+            </field>
+        </record>
+
+        <record id="sale_sync_update_trigger" model="base.automation">
+            <field name="name">Sync Sales Order Sync Trigger</field>
+            <field name="active">True</field>
+            <field name="trigger">on_write</field>
+            <field name="trigger_field_ids" search="[('model','=','sale.order'),('name','=','invoice_status')]"/>
+            <field name="action_server_id" ref="sale_order_sync_action"/>
+            <field name="filter_pre_domain">["invoice_status","=","to invoice"]</field>
+            <field name="filter_domain">["invoice_status","=","invoiced"]'</field>
+        </record>
+
+    </data>
+</odoo>
