@@ -7,8 +7,9 @@
             <field name="type">ir.actions.server</field>
             <field name="state">code</field>
             <field name="code">
-for r in records:
-    r.sync_sale_order()
+for rec in records:
+    log("sync order")
+    #rec.sync_sale_order()
             </field>
         </record>
 
@@ -16,10 +17,14 @@ for r in records:
             <field name="name">Sync Sales Order Sync Trigger</field>
             <field name="active">True</field>
             <field name="trigger">on_write</field>
-            <field name="trigger_field_ids" search="[('model','=','sale.order'),('name','=','invoice_status')]"/>
+            <field name="trigger_field_ids" search="[('model','=','sale.order'),('name','=','state')]"/>
             <field name="action_server_id" ref="sale_order_sync_action"/>
-            <field name="filter_pre_domain">["invoice_status","=","to invoice"]</field>
-            <field name="filter_domain">["invoice_status","=","invoiced"]'</field>
+            <field name="filter_pre_domain">[["state","=","draft"]]</field>
+            <field name="filter_domain">[["state","=","sale"]]</field>
+            <field name="state">code</field>
+            <field name="code">
+log("sync order")
+            </field>
         </record>
 
     </data>
