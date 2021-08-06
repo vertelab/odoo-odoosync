@@ -34,7 +34,7 @@ class SaleOrder(models.Model):
 
         odoo_conn = self._connect_to_host()
 
-        if odoo_conn and self.state == "sale":
+        if odoo_conn and self.state in ["sale", "sent"]:
             model = self.env["ir.model.data"]
             pricelist_name = model.search(
                 [

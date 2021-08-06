@@ -8,8 +8,8 @@
             <field name="state">code</field>
             <field name="code">
 for rec in records:
-    log("sync order")
-    #rec.sync_sale_order()
+    # log("sync order")
+    rec.sync_sale_order()
             </field>
         </record>
 
@@ -23,7 +23,8 @@ for rec in records:
             <field name="filter_domain">[["state","=","sale"]]</field>
             <field name="state">code</field>
             <field name="code">
-log("sync order")
+# log("sync order")
+rec.sync_sale_order()
             </field>
         </record>
 
