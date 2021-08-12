@@ -22,7 +22,8 @@ for rec in records:
             <field name="filter_domain">[["state","=","sale"]]</field>
             <field name="state">code</field>
             <field name="code">
-rec.sync_sale_order()
+for rec in records:
+    rec.sync_sale_order()
             </field>
         </record>
 
