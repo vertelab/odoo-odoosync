@@ -59,7 +59,10 @@ class SaleOrder(models.Model):
             ).name
 
             try:
-                target_pricelist_id = int(pricelist_name.split("_")[-1])
+                try:
+                    target_pricelist_id = int(pricelist_name.split("_")[-1])
+                except ValueError:
+                    target_pricelist_id = 3
                 target_partner_id = int(partner_name.split("_")[-1])
                 target_partner_shipping_id = (
                     int(partner_shipping_name.split("_")[-1])
