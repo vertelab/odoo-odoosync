@@ -89,6 +89,7 @@ class SaleOrder(models.Model):
                     "amount_total": self.amount_total,
                     "date_order": str(self.date_order),
                     "pricelist_id": target_pricelist_id,
+                    "carrier_id": 32,  # Hardcoded for now
                 }
                 sale_order_id = odoo_conn.env["sale.order"].create(sale_order_vals)
                 line_ids = []
