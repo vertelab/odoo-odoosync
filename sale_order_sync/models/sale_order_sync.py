@@ -90,7 +90,8 @@ class SaleOrder(models.Model):
                     "date_order": str(self.date_order),
                     "pricelist_id": target_pricelist_id,
                     "carrier_id": 32,  # Hardcoded for now
-                    "payment_term": 18, # Hardcoded for now 'Förskott'
+                    "payment_term": 18,  # Hardcoded for now 'Förskott'
+                    "picking_policy": "one",
                 }
                 sale_order_id = odoo_conn.env["sale.order"].create(sale_order_vals)
                 line_ids = []
