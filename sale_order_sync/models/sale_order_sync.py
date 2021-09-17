@@ -57,6 +57,21 @@ class SaleOrder(models.Model):
                     ("model", "=", "res.partner"),
                 ]
             ).name
+            if self.partner_id.agent_ids:
+                agent_name = model.search(
+                    [
+                        ("res_id", "=", self.partner_id.agent_ids[0].id),
+                        ("model", "=", "res.partner"),
+                    ]
+                ).name
+                commission_name = model.search(
+                    [
+                        ("res_id", "=", self.partner_id.agent_ids[0].commission_id.id),
+                        ("model", "=", "sale.commission"),
+                    ]
+                ).name
+            else:
+                agent_name = False
 
             try:
                 try:
@@ -73,6 +88,12 @@ class SaleOrder(models.Model):
                     int(partner_invoice_name.split("_")[-1])
                     if partner_invoice_name
                     else False
+                )
+                target_agent_id = (
+                    int(agent_name.split("_")[-1]) if agent_name else False
+                )
+                target_commission_id = (
+                    int(commission_name.split("_")[-1]) if commission_name else False
                 )
             except Exception as e:
                 _logger.exception(e)
@@ -123,6 +144,20 @@ class SaleOrder(models.Model):
 
                 sale_order = odoo_conn.env["sale.order"].browse(sale_order_id)
                 sale_order.write({"order_line": [(6, 0, line_ids)]})
+
+                # create kickback data.
+                for so_line in sale_order:
+                    agent_line_vals = {
+                        "sale_line": so_line.id,
+                        "agent": target_agent_id,
+                        "commission": target_commission_id,
+                    }
+                    agent_line_vals["display_name"] = (
+                        odoo_conn.env["sale.order.line.agent"]
+                        .new(agent_line_vals)
+                        .display_name
+                    )
+                    so_line.write({"agents": [(0, 0, agent_line_vals)]})
                 # Confirm the sale order in target
                 sale_order.action_button_confirm()
                 # change order to state done to indicate that it has been
