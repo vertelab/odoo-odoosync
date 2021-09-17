@@ -146,17 +146,12 @@ class SaleOrder(models.Model):
                 sale_order.write({"order_line": [(6, 0, line_ids)]})
 
                 # create kickback data.
-                for so_line in sale_order:
+                for so_line in sale_order.order_line:
                     agent_line_vals = {
                         "sale_line": so_line.id,
                         "agent": target_agent_id,
                         "commission": target_commission_id,
                     }
-                    agent_line_vals["display_name"] = (
-                        odoo_conn.env["sale.order.line.agent"]
-                        .new(agent_line_vals)
-                        .display_name
-                    )
                     so_line.write({"agents": [(0, 0, agent_line_vals)]})
                 # Confirm the sale order in target
                 sale_order.action_button_confirm()
