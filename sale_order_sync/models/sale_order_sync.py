@@ -95,6 +95,8 @@ class SaleOrder(models.Model):
                 target_commission_id = (
                     int(commission_name.split("_")[-1]) if commission_name else False
                 )
+                # this external id needs to manually be set in odoo 8 instance
+                target_invoice_type_id = odoo_conn.env.ref("webshop14.invoice_type").id
             except Exception as e:
                 _logger.exception(e)
                 return False
@@ -113,6 +115,7 @@ class SaleOrder(models.Model):
                     "carrier_id": 32,  # Hardcoded for now
                     "payment_term": 18,  # Hardcoded for now 'Förskott'
                     "picking_policy": "one",
+                    "invoice_type_id": target_invoice_type_id,
                 }
                 sale_order_id = odoo_conn.env["sale.order"].create(sale_order_vals)
                 line_ids = []
