@@ -81,7 +81,7 @@ class SaleOrder(models.Model):
                 target_partner_id = int(partner_name.split("_")[-1])
                 target_partner_shipping_id = (
                     int(partner_shipping_name.split("_")[-1])
-                    if partner_invoice_name
+                    if partner_shipping_name
                     else False
                 )
                 target_partner_invoice_id = (
