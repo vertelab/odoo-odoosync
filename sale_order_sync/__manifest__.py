@@ -19,21 +19,21 @@
 #
 ##############################################################################
 {
-    'name': 'Sale Order Sync',
-    'version': '1.0',
-    'author': 'Vertel',
-    'category': 'Sales',
-    'description': """
-Synchronizes sale orders from Odoo 14 to Odoo 8 
+    "name": "Sale Order Sync",
+    "version": "14.0.1.0.0",
+    "author": "Vertel",
+    "category": "Sales",
+    "description": """
+Synchronizes sale orders from Odoo 14 to Odoo 8
 using triggers.
 """,
-    'depends': ['sale', 'base_automation'],
-    'external_dependencies': {
-            'python': ['odoorpc'],
-        },
-    'data': [
-        'views/sale_order_sync.xml',
+    "depends": ["sale", "base_automation"],
+    "external_dependencies": {
+        "python": ["odoorpc"],
+    },
+    "data": [
+        "views/sale_order_sync.xml",
     ],
-    'installable': True,
-    'application': False,
+    "installable": True,
+    "application": False,
 }

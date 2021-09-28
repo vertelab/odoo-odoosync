@@ -89,12 +89,15 @@ class SaleOrder(models.Model):
                     if partner_invoice_name
                     else False
                 )
-                target_agent_id = (
-                    int(agent_name.split("_")[-1]) if agent_name else False
-                )
-                target_commission_id = (
-                    int(commission_name.split("_")[-1]) if commission_name else False
-                )
+                if agent_name:
+                    target_agent_id = (
+                        int(agent_name.split("_")[-1]) if agent_name else False
+                    )
+                    target_commission_id = (
+                        int(commission_name.split("_")[-1])
+                        if commission_name
+                        else False
+                    )
             except Exception as e:
                 _logger.exception(e)
                 return False
@@ -157,13 +160,18 @@ class SaleOrder(models.Model):
                 sale_order.write({"order_line": [(6, 0, line_ids)]})
 
                 # create kickback data.
-                for so_line in sale_order.order_line:
-                    agent_line_vals = {
-                        "sale_line": so_line.id,
-                        "agent": target_agent_id,
-                        "commission": target_commission_id,
-                    }
-                    so_line.write({"agents": [(0, 0, agent_line_vals)]})
+                if agent_name:
+                    for so_line in sale_order.order_line:
+                        agent_line_vals = {
+                            "sale_line": so_line.id,
+                            "agent": target_agent_id,
+                            "commission": target_commission_id,
+                        }
+                        so_line.write({"agents": [(0, 0, agent_line_vals)]})
+                else:
+                    _logger.warning(
+                        "Sale order without agents data! %s" % sale_order.name
+                    )
                 # Confirm the sale order in target
                 sale_order.action_button_confirm()
                 # change order to state done to indicate that it has been
