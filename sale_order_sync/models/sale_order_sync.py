@@ -173,6 +173,9 @@ class SaleOrder(models.Model):
                         "Sale order without agents data! %s" % sale_order.name
                     )
                 # Confirm the sale order in target
+                sale_order.check_order_stock()
+                # TODO: use this instead?
+                # sale_order.with_context(send_email=True).action_button_confirm()
                 sale_order.action_button_confirm()
                 # change order to state done to indicate that it has been
                 # transfered correctly

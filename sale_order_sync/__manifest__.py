@@ -20,10 +20,11 @@
 ##############################################################################
 {
     "name": "Sale Order Sync",
-    "version": "14.0.1.0.0",
+    "version": "14.0.1.0.1",
     "author": "Vertel",
     "category": "Sales",
     "description": """
+14.0.1.0.1 - Added a call to check_order_stock
 Synchronizes sale orders from Odoo 14 to Odoo 8
 using triggers.
 """,
