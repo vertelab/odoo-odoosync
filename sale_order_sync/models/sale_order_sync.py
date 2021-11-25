@@ -53,10 +53,14 @@ class SaleOrder(models.Model):
                 # -> this res.partner did not come from target Odoo.
                 # We need to see if it exists in target Odoo and if not, create it.
 
+                # Removed this as it caused problems since odoo creates duplicate
+                # res.partners when creating orders with the same email in the webshop.
                 # try to find a matching partner in target.
-                target_partner_id = odoo_conn.env["res.partner"].search(
-                    [("email", "=", self.partner_id.email)], limit=1
-                )
+                # target_partner_id = odoo_conn.env["res.partner"].search(
+                #     [("email", "=", self.partner_id.email)], limit=1
+                # )
+                # Added this to force the if to always enter the else
+                target_partner_id = False
                 if target_partner_id:
                     target_partner_id = target_partner_id[0]
                 else:
@@ -82,6 +86,28 @@ class SaleOrder(models.Model):
                     target_partner_id = odoo_conn.env["res.partner"].create(
                         target_partner_vals
                     )
+
+                    # sync adresses for the customer
+                    for adress in self.partner_id.child_ids.filtered(
+                        lambda r: r.type in ["delivery", "invoice"]
+                    ):
+                        target_adress_vals = {
+                            "parent_id": target_partner_id,
+                            "name": adress.name,
+                            "type": adress.type,
+                            "mobile": adress.phone,
+                            "email": adress.email,
+                            "street": adress.street,
+                            "street2": adress.street2,
+                            "zip": adress.zip,
+                            "city": adress.city,
+                            "country_id": target_country[0]
+                            if target_country
+                            else False,
+                            "category_id": [(4, 233, 0)],  # slutkonsument
+                            "lang": adress.lang,
+                        }
+                        odoo_conn.env["res.partner"].create(target_adress_vals)
 
                 # Create an external id in source Odoo so that we can find
                 # it quicker next time.
@@ -178,6 +204,16 @@ class SaleOrder(models.Model):
                             [("default_code", "=", line.product_id.default_code)],
                             limit=1,
                         )
+                        if not product_id:
+                            product_name = model.search(
+                                [
+                                    ("res_id", "=", line.product_id.id),
+                                    ("model", "=", "product.product"),
+                                ]
+                            ).name
+                            product_id = odoo_conn.env["product.product"].search(
+                                [("id", "=", product_name.split("_")[-1])]
+                            )
                     elif (
                         line.product_id.name[0:12] == "Free Product"
                         and line.product_id.type == "service"

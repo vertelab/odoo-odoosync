@@ -24,7 +24,8 @@
     "author": "Vertel",
     "category": "Sales",
     "description": """
-14.0.1.2.0 - Added sync of res.partners.
+14.0.1.2.0 - Added sync of multiple adresses for res.partners.
+14.0.1.1.0 - Added sync of res.partners.
 14.0.1.0.1 - Added a call to check_order_stock
 Synchronizes sale orders from Odoo 14 to Odoo 8
 using triggers.
