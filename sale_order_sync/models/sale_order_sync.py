@@ -147,6 +147,8 @@ class SaleOrder(models.Model):
                  ("model", "=", "res.partner")]
             ).name
 
+            _logger.warning(f"SALE ORDER PARTERNAME: DANLOF: {partner_name}");
+
             if not partner_name:
                 # No external id found for res.partner in source Odoo
                 # -> this res.partner did not come from target Odoo.
