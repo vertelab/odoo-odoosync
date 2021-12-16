@@ -289,7 +289,8 @@ class SaleOrder(models.Model):
                         "res_id": self.partner_id.id,
                     }
                 )
-
+            
+            _logger.warning(f"invoice ID: {self.parnter_invoice_id.id}")
             partner_shipping_name = model.search(
                 [
                     ("res_id", "=", self.partner_invoice_id.id),
