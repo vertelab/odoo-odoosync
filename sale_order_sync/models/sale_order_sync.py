@@ -187,6 +187,7 @@ class SaleOrder(models.Model):
                     for adress in self.partner_id.child_ids.filtered(
                         lambda r: r.type in ["delivery", "invoice"]
                     ):
+                        _logger.warning("KEKW");
                         target_adress_vals = {
                             "name": adress.name,
                             "type": adress.type,
@@ -208,7 +209,9 @@ class SaleOrder(models.Model):
                         ]):
                             _logger.warning("UPDATING A PARTNER ADRESS: DANLOF: EKSVIC")
                             for child in target_partner.child_ids:
+                                _logger.warning("WKEK")
                                 if child.type == adress.type:
+                                    _logger.warning("FOO")
                                     child.write(target_adress_vals)
                         else:
                             _logger.warning("CREATING A PARTNER ADRESS: DANLOF: EKSVIC")
@@ -224,7 +227,7 @@ class SaleOrder(models.Model):
                                     "module": PREFIX,
                                     "name": f"res_partner_{adress_id}",
                                     "model": "res.partner",
-                                    "res_id": self.partner_id.id,
+                                    "res_id": adress.id,
                                 }
                             )
                     target_partner = target_partner.id;
@@ -290,7 +293,7 @@ class SaleOrder(models.Model):
                     }
                 )
             
-            _logger.warning(f"invoice ID: {self.parnter_invoice_id.id}")
+            _logger.warning(f"invoice ID: {self.partner_invoice_id.id}")
             partner_shipping_name = model.search(
                 [
                     ("res_id", "=", self.partner_invoice_id.id),
