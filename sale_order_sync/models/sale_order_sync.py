@@ -202,29 +202,30 @@ class SaleOrder(models.Model):
                             "category_id": [(4, 233, 0)],  # slutkonsument
                             "lang": adress.lang,
                         }
-                    if model.search([
-                            ('module', '=', PREFIX),
-                            ('name', '=', 'res_partner' + "_" + str(self.partner_id.child_ids[0]))
-                    ]):
-                        _logger.warning("UPDATING A PARTNER ADRESS: DANLOF: EKSVIC")
-                        for child in target_partner.child_ids:
-                            child.write(target_adress_vals)
-                    else:
-                        _logger.warning("CREATING A PARTNER ADRESS: DANLOF: EKSVIC")
-                        target_adress_vals.update({
-                            "parent_id": target_partner.id,
-                        })
-                        adress_id = odoo8_conn.env['res.partner'].create(
-                            target_adress_vals
-                        )
-                        model.create(
-                            {
-                                "module": PREFIX,
-                                "name": f"res_partner_{target_partner}",
-                                "model": "res.partner",
-                                "res_id": self.partner_id.id,
-                            }
-                        )
+                        if model.search([
+                                ('module', '=', PREFIX),
+                                ('name', '=', 'res_partner' + "_" + str(adress.id))
+                        ]):
+                            _logger.warning("UPDATING A PARTNER ADRESS: DANLOF: EKSVIC")
+                            for child in target_partner.child_ids:
+                                if child.type == adress.type:
+                                    child.write(target_adress_vals)
+                        else:
+                            _logger.warning("CREATING A PARTNER ADRESS: DANLOF: EKSVIC")
+                            target_adress_vals.update({
+                                "parent_id": target_partner.id,
+                            })
+                            adress_id = odoo8_conn.env['res.partner'].create(
+                                target_adress_vals
+                            )
+                            model.create(
+                                {
+                                    "module": PREFIX,
+                                    "name": f"res_partner_{target_partner}",
+                                    "model": "res.partner",
+                                    "res_id": self.partner_id.id,
+                                }
+                            )
 
             if not partner_name:
                 # No external id found for res.partner in source Odoo
