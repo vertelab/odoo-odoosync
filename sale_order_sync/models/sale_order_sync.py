@@ -221,7 +221,7 @@ class SaleOrder(models.Model):
                             model.create(
                                 {
                                     "module": PREFIX,
-                                    "name": f"res_partner_{target_partner}",
+                                    "name": f"res_partner_{adress_id}",
                                     "model": "res.partner",
                                     "res_id": self.partner_id.id,
                                 }
