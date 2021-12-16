@@ -218,6 +218,7 @@ class SaleOrder(models.Model):
                             adress_id = odoo8_conn.env['res.partner'].create(
                                 target_adress_vals
                             )
+                            _logger.warning(f"ADDRESS ID IS: {f'res_partner_{adress_id}'}")
                             model.create(
                                 {
                                     "module": PREFIX,
