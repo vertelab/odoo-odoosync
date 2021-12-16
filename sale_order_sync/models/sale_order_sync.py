@@ -81,7 +81,8 @@ class ResUsers(models.Model):
             )
 
             if target_partner_id:
-                self.create_external_id('res.partner', partner.id, target_partner_id)
+                self.create_external_id(
+                    'res.partner', partner.id, target_partner_id)
             else:
                 _logger.warning(f'Target Partner ID IS FALSE, VERY BAD!')
 
@@ -132,9 +133,28 @@ class SaleOrder(models.Model):
         """Connects to a remote odoo server and syncronizes the sale order"""
         _logger.info("Syncronizing sale.order...")
 
-        odoo_conn = self._connect_to_host()
+        odoo8_conn = self._connect_to_host()
 
-        if odoo_conn and self.state in ["sale", "sent"]:
+        target_country = odoo8_conn.env["res.country"].search(
+            [("code", "=", self.partner_id.country_id.code)], limit=1
+        )
+
+        # ANONYMOUS CHECKOUT PARTER CREATION START
+        target_partner_vals = {
+            "name": self.partner_id.name,
+            "type": self.partner_id.type,
+            "mobile": self.partner_id.phone,
+            "email": self.partner_id.email,
+            "street": self.partner_id.street,
+            "street2": self.partner_id.street2,
+            "zip": self.partner_id.zip,
+            "city": self.partner_id.city,
+            "country_id": target_country[0] if target_country else False,
+            "category_id": [(4, 233, 0)],  # slutkonsument
+            "lang": self.partner_id.lang,
+        }
+
+        if odoo8_conn and self.state in ["sale", "sent"]:
             model = self.env["ir.model.data"]
             pricelist_name = model.search(
                 [
@@ -147,54 +167,27 @@ class SaleOrder(models.Model):
                  ("model", "=", "res.partner")]
             ).name
 
-            _logger.warning(f"SALE ORDER PARTERNAME: DANLOF: {partner_name}");
+            _logger.warning(f"SALE ORDER PARTERNAME: DANLOF: {partner_name}")
 
-            if not partner_name:
-                # No external id found for res.partner in source Odoo
-                # -> this res.partner did not come from target Odoo.
-                # We need to see if it exists in target Odoo and if not, create it.
+            if partner_name:
+                partner_name = partner_name.split('_')[-1]
 
-                # Removed this as it caused problems since odoo creates duplicate
-                # res.partners when creating orders with the same email in the webshop.
-                # try to find a matching partner in target.
-                # target_partner_id = odoo_conn.env["res.partner"].search(
-                #     [("email", "=", self.partner_id.email)], limit=1
-                # )
-                # Added this to force the if to always enter the else
-                target_partner_id = False
-                if target_partner_id:
-                    target_partner_id = target_partner_id[0]
-                else:
-                    # Create a new partner in target Odoo.
-                    target_country = odoo_conn.env["res.country"].search(
-                        [("code", "=", self.partner_id.country_id.code)], limit=1
-                    )
+                target_partner = False
 
-                    # ANONYMOUS CHECKOUT PARTER CREATION START
-                    target_partner_vals = {
-                        "name": self.partner_id.name,
-                        "type": self.partner_id.type,
-                        "mobile": self.partner_id.phone,
-                        "email": self.partner_id.email,
-                        "street": self.partner_id.street,
-                        "street2": self.partner_id.street2,
-                        "zip": self.partner_id.zip,
-                        "city": self.partner_id.city,
-                        "country_id": target_country[0] if target_country else False,
-                        "category_id": [(4, 233, 0)],  # slutkonsument
-                        "lang": self.partner_id.lang,
-                    }
+                target_partner = odoo8_conn.env['res.partner'].browse(
+                    int(partner_name)
+                )
 
-                    target_partner_id = odoo_conn.env["res.partner"].create(
-                        target_partner_vals
-                    )
+                _logger.warning("UPDATING A PARTNER: DANLOF: EKSVIC")
 
+                target_partner.write(target_partner_vals)
+
+                if target_partner:
                     # sync adresses for the customer
                     for adress in self.partner_id.child_ids.filtered(
                         lambda r: r.type in ["delivery", "invoice"]
                     ):
                         target_adress_vals = {
-                            "parent_id": target_partner_id,
                             "name": adress.name,
                             "type": adress.type,
                             "mobile": adress.phone,
@@ -209,7 +202,78 @@ class SaleOrder(models.Model):
                             "category_id": [(4, 233, 0)],  # slutkonsument
                             "lang": adress.lang,
                         }
-                        odoo_conn.env["res.partner"].create(target_adress_vals)
+                    if model.search([
+                            ('module', '=', PREFIX),
+                            ('name', '=', 'res_partner' + "_" + str(self.partner_id.child_ids[0]))
+                    ]):
+                        _logger.warning("UPDATING A PARTNER ADRESS: DANLOF: EKSVIC")
+                        for child in target_partner.child_ids:
+                            child.write(target_adress_vals)
+                    else:
+                        _logger.warning("CREATING A PARTNER ADRESS: DANLOF: EKSVIC")
+                        target_adress_vals.update({
+                            "parent_id": target_partner.id,
+                        })
+                        adress_id = odoo8_conn.env['res.partner'].create(
+                            target_adress_vals
+                        )
+                        model.create(
+                            {
+                                "module": PREFIX,
+                                "name": f"res_partner_{target_partner}",
+                                "model": "res.partner",
+                                "res_id": self.partner_id.id,
+                            }
+                        )
+
+            if not partner_name:
+                # No external id found for res.partner in source Odoo
+                # -> this res.partner did not come from target Odoo.
+                # We need to see if it exists in target Odoo and if not, create it.
+
+                # Removed this as it caused problems since odoo creates duplicate
+                # res.partners when creating orders with the same email in the webshop.
+                # try to find a matching partner in target.
+                # target_partner_id = odoo_conn.env["res.partner"].search(
+                #     [("email", "=", self.partner_id.email)], limit=1
+                # )
+                # Added this to force the if to always enter the else
+                target_partner = False
+                if target_partner:
+                    target_partner = target_partner[0]
+                else:
+                    # Create a new partner in target Odoo.
+                    target_country = odoo8_conn.env["res.country"].search(
+                        [("code", "=", self.partner_id.country_id.code)], limit=1
+                    )
+
+                    # ANONYMOUS CHECKOUT PARTER CREATION START
+                    target_partner = odoo8_conn.env["res.partner"].create(
+                        target_partner_vals
+                    )
+
+                    # sync adresses for the customer
+                    for adress in self.partner_id.child_ids.filtered(
+                        lambda r: r.type in ["delivery", "invoice"]
+                    ):
+                        target_adress_vals = {
+                            # "parent_id": target_partner_id,
+                            "name": adress.name,
+                            "type": adress.type,
+                            "mobile": adress.phone,
+                            "email": adress.email,
+                            "street": adress.street,
+                            "street2": adress.street2,
+                            "zip": adress.zip,
+                            "city": adress.city,
+                            "country_id": target_country[0]
+                            if target_country
+                            else False,
+                            "category_id": [(4, 233, 0)],  # slutkonsument
+                            "lang": adress.lang,
+                        }
+                        odoo8_conn.env["res.partner"].create(
+                            target_adress_vals)
                     # ANONYMOUS CHECKOUT PARTER CREATION END
 
                 # Create an external id in source Odoo so that we can find
@@ -217,7 +281,7 @@ class SaleOrder(models.Model):
                 model.create(
                     {
                         "module": PREFIX,
-                        "name": f"res_partner_{target_partner_id}",
+                        "name": f"res_partner_{target_partner}",
                         "model": "res.partner",
                         "res_id": self.partner_id.id,
                     }
@@ -259,8 +323,8 @@ class SaleOrder(models.Model):
                 #     target_pricelist_id = int(pricelist_name.split("_")[-1])
                 # except ValueError:
                 #     target_pricelist_id = 3
-                if not target_partner_id:
-                    target_partner_id = int(partner_name.split("_")[-1])
+                if not target_partner:
+                    target_partner = int(partner_name.split("_")[-1])
                 target_partner_shipping_id = (
                     int(partner_shipping_name.split("_")[-1])
                     if partner_shipping_name
@@ -286,7 +350,7 @@ class SaleOrder(models.Model):
 
             try:
                 sale_order_vals = {
-                    "partner_id": target_partner_id,
+                    "partner_id": target_partner,
                     "partner_invoice_id": target_partner_invoice_id,
                     "partner_shipping_id": target_partner_shipping_id,
                     "name": self.name,
@@ -298,14 +362,14 @@ class SaleOrder(models.Model):
                     "carrier_id": 32,  # Hardcoded for now
                     "picking_policy": "one",
                 }
-                sale_order_id = odoo_conn.env["sale.order"].create(
+                sale_order_id = odoo8_conn.env["sale.order"].create(
                     sale_order_vals)
                 line_ids = []
 
                 for line in self.order_line:
                     product_id = False
                     if line.product_id.default_code:
-                        product_id = odoo_conn.env["product.product"].search(
+                        product_id = odoo8_conn.env["product.product"].search(
                             [("default_code", "=", line.product_id.default_code)],
                             limit=1,
                         )
@@ -316,7 +380,7 @@ class SaleOrder(models.Model):
                                     ("model", "=", "product.product"),
                                 ]
                             ).name
-                            product_id = odoo_conn.env["product.product"].search(
+                            product_id = odoo8_conn.env["product.product"].search(
                                 [("id", "=", product_name.split("_")[-1])]
                             )
                     elif (
@@ -326,7 +390,7 @@ class SaleOrder(models.Model):
                         # This is a free product generated by odoo from a coupon
                         # we translate this to the "Discount" product in target Odoo
                         product_id = [
-                            odoo_conn.env.ref(
+                            odoo8_conn.env.ref(
                                 "__export__.product_product_4963").id
                         ]
 
@@ -339,18 +403,18 @@ class SaleOrder(models.Model):
                     line_vals = {
                         "name": line.name,
                         "order_id": sale_order_id,
-                        "order_partner_id": target_partner_id,
+                        "order_partner_id": target_partner,
                         "price_unit": line.price_unit,
                         "price_subtotal_incl": line.price_subtotal,
                         "product_id": product_id[0],
                         "product_uom_qty": line.product_uom_qty,
                     }
-                    sale_order_line_id = odoo_conn.env["sale.order.line"].create(
+                    sale_order_line_id = odoo8_conn.env["sale.order.line"].create(
                         line_vals
                     )
                     line_ids.append(sale_order_line_id)
 
-                sale_order = odoo_conn.env["sale.order"].browse(sale_order_id)
+                sale_order = odoo8_conn.env["sale.order"].browse(sale_order_id)
                 sale_order.write({"order_line": [(6, 0, line_ids)]})
 
                 # create kickback data.
