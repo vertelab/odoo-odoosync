@@ -217,6 +217,7 @@ class SaleOrder(models.Model):
                             target_adress_vals.update({
                                 "parent_id": target_partner.id,
                             })
+                            _logger.warning(f"TARGET VALS: ===== {target_adress_vals}")
                             adress_id = odoo8_conn.env['res.partner'].create(
                                 target_adress_vals
                             )
