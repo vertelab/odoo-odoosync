@@ -324,6 +324,11 @@ class SaleOrder(models.Model):
                 #     target_pricelist_id = int(pricelist_name.split("_")[-1])
                 # except ValueError:
                 #     target_pricelist_id = 3
+                _logger.warning(f"WHAT IS PARTNER_NAME?!: {partner_name}")
+                _logger.warning(f"WHAT IS partner_shipping_id?!: {self.partner_shipping_id.id}")
+                _logger.warning(f"WHAT IS partner_invoice_id?!: {self.partner_invoice_id.id}")
+                _logger.warning(f"WHAT IS partner_shipping_id?!: {target_partner.partner_shipping_id.id}")
+                _logger.warning(f"WHAT IS partner_invoice_id?!: {target_partner.partner_invoice_id.id}")
                 if not target_partner:
                     target_partner = int(partner_name.split("_")[-1])
                 target_partner_shipping_id = (
@@ -363,6 +368,8 @@ class SaleOrder(models.Model):
                     "carrier_id": 32,  # Hardcoded for now
                     "picking_policy": "one",
                 }
+
+                _logger.warning(f"THIS IS SALEORDERVALS: {sale_order_vals}")
                 sale_order_id = odoo8_conn.env["sale.order"].create(
                     sale_order_vals)
                 line_ids = []
