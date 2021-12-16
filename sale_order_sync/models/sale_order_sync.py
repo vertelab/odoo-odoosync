@@ -51,7 +51,7 @@ class ResUsers(models.Model):
         odoo8_conn = self._connect_to_host()
 
         if odoo8_conn:
-            db, login, password = self.super().signup(values=values, token=token)
+            db, login, password = super().signup(values=values, token=token)
             partner = self.env['res.users'].search([
                 ("login", "=", login),
             ]).partner_id
