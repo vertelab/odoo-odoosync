@@ -226,6 +226,7 @@ class SaleOrder(models.Model):
                                     "res_id": self.partner_id.id,
                                 }
                             )
+                    target_partner = target_partner.id;
 
             if not partner_name:
                 # No external id found for res.partner in source Odoo
@@ -324,9 +325,6 @@ class SaleOrder(models.Model):
                 #     target_pricelist_id = int(pricelist_name.split("_")[-1])
                 # except ValueError:
                 #     target_pricelist_id = 3
-                _logger.warning(f"WHAT IS PARTNER_NAME?!: {partner_name}")
-                _logger.warning(f"WHAT IS partner_shipping_id?!: {self.partner_shipping_id.id}")
-                _logger.warning(f"WHAT IS partner_invoice_id?!: {self.partner_invoice_id.id}")
                 if not target_partner:
                     target_partner = int(partner_name.split("_")[-1])
                 target_partner_shipping_id = (
@@ -353,6 +351,7 @@ class SaleOrder(models.Model):
                 return False
 
             try:
+                _
                 sale_order_vals = {
                     "partner_id": target_partner,
                     "partner_invoice_id": target_partner_invoice_id,
