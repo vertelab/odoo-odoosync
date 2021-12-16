@@ -31,12 +31,12 @@ class ResUsers(models.Model):
         except Exception as e:
             _logger.warning(f"Could not connect to host. {e}")
 
-    def create_external_id(self, model, remote_id):
+    def create_external_id(self, model, partner_id, remote_id):
         """Expected external ID(odoo14) of remote model record(odoo8)."""
         ext_id_vals = {
             "module": PREFIX,  # __ma_import__
             "model": "res.partner",  # Modelnamn på Odoo 14
-            "res_id": remote_id,  # ID på Odoo 14
+            "res_id": partner_id,  # ID på Odoo 14
             # Sträng med modelnamn i Odoo 14 och ID på Odoo 8 på formen: res_partner_41820
             "name": model.replace(".", '_') + "_" + str(remote_id),
         }
@@ -81,7 +81,7 @@ class ResUsers(models.Model):
             )
 
             if target_partner_id:
-                self.create_external_id('res.partner', target_partner_id)
+                self.create_external_id('res.partner', partner.id, target_partner_id)
             else:
                 _logger.warning(f'Target Partner ID IS FALSE, VERY BAD!')
 
