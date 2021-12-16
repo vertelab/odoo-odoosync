@@ -187,7 +187,6 @@ class SaleOrder(models.Model):
                     for adress in self.partner_id.child_ids.filtered(
                         lambda r: r.type in ["delivery", "invoice"]
                     ):
-                        _logger.warning("KEKW");
                         target_adress_vals = {
                             "name": adress.name,
                             "type": adress.type,
@@ -203,15 +202,15 @@ class SaleOrder(models.Model):
                             "category_id": [(4, 233, 0)],  # slutkonsument
                             "lang": adress.lang,
                         }
-                        if model.search([
+                        domain = model.search([
                                 ('module', '=', PREFIX),
                                 ('name', '=', 'res_partner' + "_" + str(adress.id))
-                        ]):
+                        ])
+                        types = [item.type for item in domain]
+                        if adress.type in types:
                             _logger.warning("UPDATING A PARTNER ADRESS: DANLOF: EKSVIC")
                             for child in target_partner.child_ids:
-                                _logger.warning("WKEK")
                                 if child.type == adress.type:
-                                    _logger.warning("FOO")
                                     child.write(target_adress_vals)
                         else:
                             _logger.warning("CREATING A PARTNER ADRESS: DANLOF: EKSVIC")
