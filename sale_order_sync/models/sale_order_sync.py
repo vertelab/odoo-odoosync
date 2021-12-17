@@ -181,8 +181,8 @@ class ResUsers(models.Model):
                     }
                     odoo8_conn.env["res.partner"].create(target_adress_vals)
                     # ANONYMOUS CHECKOUT PARTER CREATION END
-                _logger.warning(db, login, password)
-                return (db, login, password)
+            _logger.warning(db, login, password)
+            return (db, login, password)
 
 
 class SaleOrder(models.Model):
