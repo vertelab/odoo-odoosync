@@ -448,6 +448,8 @@ class SaleOrder(models.Model):
                 # Currently we do not want to.
                 # sale_order.with_context(send_email=True).action_button_confirm()
                 sale_order.action_button_confirm()
+                for picking_id in sale_order.picking_ids:
+                    picking_id.write({'ready4picking': True})
                 # change order to state done to indicate that it has been
                 # transfered correctly
                 self.state = "done"
