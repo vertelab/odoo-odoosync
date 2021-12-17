@@ -204,7 +204,8 @@ class SaleOrder(models.Model):
                         }
                         domain = model.search([
                                 ('module', '=', PREFIX),
-                                ('name', '=', 'res_partner' + "_" + str(adress.id))
+                                ('res_id', '=', adress.id),
+                                ('model', '=', 'res.partner')
                         ])
                         types = [item.type for item in domain]
                         if adress.type in types:
@@ -442,8 +443,7 @@ class SaleOrder(models.Model):
                 #         "Sale order without agents data! %s" % sale_order.name
                 #     )
                 # Confirm the sale order in target
-                foo = sale_order.check_order_stock()
-                _logger.error(f"Foo is: {foo}")
+                sale_order.check_order_stock()
                 # Use this line if we want to send email.
                 # Currently we do not want to.
                 # sale_order.with_context(send_email=True).action_button_confirm()
