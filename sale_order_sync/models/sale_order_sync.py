@@ -94,6 +94,7 @@ class ResUsers(models.Model):
                 _logger.warning("UPDATING A PARTNER: DANLOF: EKSVIC 2")
                 if target_partner:
                     _logger.warning("UPDATING A PARTNER: DANLOF: EKSVIC 3")
+                    _logger.warning(f"partner is : {partner.read()}")
                     # sync adresses for the customer
                     for adress in partner.child_ids.filtered(
                         lambda r: r.type in ["delivery", "invoice"]
