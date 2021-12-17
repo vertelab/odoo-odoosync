@@ -442,7 +442,8 @@ class SaleOrder(models.Model):
                 #         "Sale order without agents data! %s" % sale_order.name
                 #     )
                 # Confirm the sale order in target
-                sale_order.check_order_stock()
+                foo = sale_order.check_order_stock()
+                _logger.error(f"Foo is: {foo}")
                 # Use this line if we want to send email.
                 # Currently we do not want to.
                 # sale_order.with_context(send_email=True).action_button_confirm()
