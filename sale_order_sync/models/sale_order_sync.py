@@ -353,8 +353,16 @@ class SaleOrder(models.Model):
                             "category_id": [(4, 233, 0)],  # slutkonsument
                             "lang": adress.lang,
                         }
-                        odoo8_conn.env["res.partner"].create(
+                        created_adress = odoo8_conn.env["res.partner"].create(
                             target_adress_vals)
+                        model.create(
+                            {
+                                "module": PREFIX,
+                                "name": f"res_partner_{created_adress}",
+                                "model": "res.partner",
+                                "res_id": adress.id,
+                            }
+                        )
                     # ANONYMOUS CHECKOUT PARTER CREATION END
 
                 # Create an external id in source Odoo so that we can find
