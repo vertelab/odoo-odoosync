@@ -61,7 +61,7 @@ class ResUsers(models.Model):
                 [("code", "=", partner.country_id.code)], limit=1
             )
             partner_name = model.search(
-                [("res_id", "=", self.partner_id.id),
+                [("res_id", "=", partner.id),
                  ("model", "=", "res.partner")]
             ).name
 
