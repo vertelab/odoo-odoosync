@@ -431,7 +431,7 @@ class SaleOrder(models.Model):
                 return False
 
             try:
-                _
+                _logger.warning(f'partner_invoice_id: {target_partner_invoice_id} \n partner_shipping_id: {target_partner_shipping_id}')
                 sale_order_vals = {
                     "partner_id": target_partner,
                     "partner_invoice_id": target_partner_invoice_id,
