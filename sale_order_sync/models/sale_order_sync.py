@@ -65,7 +65,6 @@ class ResUsers(models.Model):
                  ("model", "=", "res.partner")]
             ).name
 
-            _logger.warning(f" PARTERNAME: DANLOF: {partner_name}")
             target_partner_vals = {
                 "name": partner.name,
                 "type": partner.type,
@@ -93,11 +92,14 @@ class ResUsers(models.Model):
 
                 target_partner.write(target_partner_vals)
 
+                _logger.warning("UPDATING A PARTNER: DANLOF: EKSVIC 2")
                 if target_partner:
+                    _logger.warning("UPDATING A PARTNER: DANLOF: EKSVIC 3")
                     # sync adresses for the customer
                     for adress in self.partner_id.child_ids.filtered(
                         lambda r: r.type in ["delivery", "invoice"]
                     ):
+                        _logger.warning("UPDATING A PARTNER: DANLOF: EKSVIC 4")
                         target_adress_vals = {
                             "name": adress.name,
                             "type": adress.type,
@@ -119,6 +121,7 @@ class ResUsers(models.Model):
                                 ('model', '=', 'res.partner')
                         ])
                         types = [self.env['res.partner'].browse(item.res_id).type for item in domain]
+                        _logger.warning(f"Types: {types} DANLOF: EKSVIC")
                         if adress.type in types:
                             _logger.warning("UPDATING A PARTNER ADRESS: DANLOF: EKSVIC")
                             for child in target_partner.child_ids:
@@ -177,6 +180,7 @@ class ResUsers(models.Model):
                     }
                     odoo8_conn.env["res.partner"].create(target_adress_vals)
                     # ANONYMOUS CHECKOUT PARTER CREATION END
+                _logger.warning(db, login, password)
                 return (db, login, password)
 
 
