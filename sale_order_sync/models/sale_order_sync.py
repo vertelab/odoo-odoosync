@@ -49,19 +49,23 @@ class ResUsers(models.Model):
         _logger.info("Syncronizing res.users...")
 
         odoo8_conn = self._connect_to_host()
-
+        
         if odoo8_conn:
             db, login, password = super().signup(values=values, token=token)
             partner = self.env['res.users'].search([
                 ("login", "=", login),
             ]).partner_id
-
+            model = self.env["ir.model.data"]
             # Create a new partner in target Odoo.
             target_country = odoo8_conn.env["res.country"].search(
                 [("code", "=", partner.country_id.code)], limit=1
             )
+            partner_name = model.search(
+                [("res_id", "=", self.partner_id.id),
+                 ("model", "=", "res.partner")]
+            ).name
 
-            # ANONYMOUS CHECKOUT PARTER CREATION START
+            _logger.warning(f" PARTERNAME: DANLOF: {partner_name}")
             target_partner_vals = {
                 "name": partner.name,
                 "type": partner.type,
@@ -75,40 +79,104 @@ class ResUsers(models.Model):
                 "category_id": [(4, 233, 0)],  # slutkonsument
                 "lang": partner.lang,
             }
+            if partner_name:
+                partner_name = partner_name.split('_')[-1]
 
-            target_partner_id = odoo8_conn.env["res.partner"].create(
-                target_partner_vals
-            )
+                target_partner = False
 
-            if target_partner_id:
-                self.create_external_id(
-                    'res.partner', partner.id, target_partner_id)
+                target_partner = odoo8_conn.env['res.partner'].browse(
+                    int(partner_name)
+                )
+
+                _logger.warning("UPDATING A PARTNER: DANLOF: EKSVIC")
+
+                target_partner.write(target_partner_vals)
+
+                if target_partner:
+                    # sync adresses for the customer
+                    for adress in self.partner_id.child_ids.filtered(
+                        lambda r: r.type in ["delivery", "invoice"]
+                    ):
+                        target_adress_vals = {
+                            "name": adress.name,
+                            "type": adress.type,
+                            "mobile": adress.phone,
+                            "email": adress.email,
+                            "street": adress.street,
+                            "street2": adress.street2,
+                            "zip": adress.zip,
+                            "city": adress.city,
+                            "country_id": target_country[0]
+                            if target_country
+                            else False,
+                            "category_id": [(4, 233, 0)],  # slutkonsument
+                            "lang": adress.lang,
+                        }
+                        domain = model.search([
+                                ('module', '=', PREFIX),
+                                ('res_id', '=', adress.id),
+                                ('model', '=', 'res.partner')
+                        ])
+                        types = [self.env['res.partner'].browse(item.res_id).type for item in domain]
+                        if adress.type in types:
+                            _logger.warning("UPDATING A PARTNER ADRESS: DANLOF: EKSVIC")
+                            for child in target_partner.child_ids:
+                                if child.type == adress.type:
+                                    child.write(target_adress_vals)
+                        else:
+                            _logger.warning("CREATING A PARTNER ADRESS: DANLOF: EKSVIC")
+                            target_adress_vals.update({
+                                "parent_id": target_partner.id,
+                            })
+                            _logger.warning(f"TARGET VALS: ===== {target_adress_vals}")
+                            adress_id = odoo8_conn.env['res.partner'].create(
+                                target_adress_vals
+                            )
+                            _logger.warning(f"ADDRESS ID IS: {f'res_partner_{adress_id}'}")
+                            model.create(
+                                {
+                                    "module": PREFIX,
+                                    "name": f"res_partner_{adress_id}",
+                                    "model": "res.partner",
+                                    "res_id": adress.id,
+                                }
+                            )
             else:
-                _logger.warning(f'Target Partner ID IS FALSE, VERY BAD!')
+                # ANONYMOUS CHECKOUT PARTER CREATION START
 
-            # sync adresses for the customer
-            for adress in partner.child_ids.filtered(
-                lambda r: r.type in ["delivery", "invoice"]
-            ):
-                target_adress_vals = {
-                    "parent_id": target_partner_id,
-                    "name": adress.name,
-                    "type": adress.type,
-                    "mobile": adress.phone,
-                    "email": adress.email,
-                    "street": adress.street,
-                    "street2": adress.street2,
-                    "zip": adress.zip,
-                    "city": adress.city,
-                    "country_id": target_country[0]
-                    if target_country
-                    else False,
-                    "category_id": [(4, 233, 0)],  # slutkonsument
-                    "lang": adress.lang,
-                }
-                odoo8_conn.env["res.partner"].create(target_adress_vals)
-                # ANONYMOUS CHECKOUT PARTER CREATION END
-            return (db, login, password)
+                target_partner_id = odoo8_conn.env["res.partner"].create(
+                    target_partner_vals
+                )
+
+                if target_partner_id:
+                    self.create_external_id(
+                        'res.partner', partner.id, target_partner_id)
+                else:
+                    _logger.warning(f'Target Partner ID IS FALSE, VERY BAD!')
+
+                # sync adresses for the customer
+                for adress in partner.child_ids.filtered(
+                    lambda r: r.type in ["delivery", "invoice"]
+                ):
+                    target_adress_vals = {
+                        "parent_id": target_partner_id,
+                        "name": adress.name,
+                        "type": adress.type,
+                        "mobile": adress.phone,
+                        "email": adress.email,
+                        "street": adress.street,
+                        "street2": adress.street2,
+                        "zip": adress.zip,
+                        "city": adress.city,
+                        "country_id": target_country[0]
+                        if target_country
+                        else False,
+                        "category_id": [(4, 233, 0)],  # slutkonsument
+                        "lang": adress.lang,
+                    }
+                    odoo8_conn.env["res.partner"].create(target_adress_vals)
+                    # ANONYMOUS CHECKOUT PARTER CREATION END
+                return (db, login, password)
 
 
 class SaleOrder(models.Model):
