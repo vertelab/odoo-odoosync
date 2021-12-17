@@ -207,7 +207,7 @@ class SaleOrder(models.Model):
                                 ('res_id', '=', adress.id),
                                 ('model', '=', 'res.partner')
                         ])
-                        types = [item.res_id.type for item in domain]
+                        types = [self.env['res.partner'].browse(item.res_id).type for item in domain]
                         if adress.type in types:
                             _logger.warning("UPDATING A PARTNER ADRESS: DANLOF: EKSVIC")
                             for child in target_partner.child_ids:
