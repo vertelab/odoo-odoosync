@@ -79,6 +79,7 @@ class ResUsers(models.Model):
                 "category_id": [(4, 233, 0)],  # slutkonsument
                 "lang": partner.lang,
             }
+            _logger.warning(f"PARTNER NAME: {partner_name} LOFDAN EKSVIC")
             if partner_name:
                 partner_name = partner_name.split('_')[-1]
 
@@ -132,7 +133,7 @@ class ResUsers(models.Model):
                             adress_id = odoo8_conn.env['res.partner'].create(
                                 target_adress_vals
                             )
-                            _logger.warning(f"ADDRESS ID IS: {f'res_partner_{adress_id}'}")
+                            _logger.warning(f"EXTERNALLY CREATED ID IS: {f'res_partner_{adress_id}'}")
                             model.create(
                                 {
                                     "module": PREFIX,
@@ -142,8 +143,8 @@ class ResUsers(models.Model):
                                 }
                             )
             else:
-                # ANONYMOUS CHECKOUT PARTER CREATION START
-
+                # ANONYMOUS CHECKOUT PARTNER CREATION START
+                _logger.warning("SOMETHING ELSE HAPPENS HERE")
                 target_partner_id = odoo8_conn.env["res.partner"].create(
                     target_partner_vals
                 )
