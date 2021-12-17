@@ -94,57 +94,58 @@ class ResUsers(models.Model):
                 _logger.warning("UPDATING A PARTNER: DANLOF: EKSVIC 2")
                 if target_partner:
                     _logger.warning("UPDATING A PARTNER: DANLOF: EKSVIC 3")
-                    _logger.warning(f"partner is : {partner.read()}")
+                    #_logger.warning(f"partner is : {partner.read()}")
                     # sync adresses for the customer
-                    for adress in partner.child_ids.filtered(
-                        lambda r: r.type in ["delivery", "invoice"]
-                    ):
-                        _logger.warning("UPDATING A PARTNER: DANLOF: EKSVIC 4")
-                        target_adress_vals = {
-                            "name": adress.name,
-                            "type": adress.type,
-                            "mobile": adress.phone,
-                            "email": adress.email,
-                            "street": adress.street,
-                            "street2": adress.street2,
-                            "zip": adress.zip,
-                            "city": adress.city,
-                            "country_id": target_country[0]
-                            if target_country
-                            else False,
-                            "category_id": [(4, 233, 0)],  # slutkonsument
-                            "lang": adress.lang,
-                        }
-                        domain = model.search([
-                                ('module', '=', PREFIX),
-                                ('res_id', '=', adress.id),
-                                ('model', '=', 'res.partner')
-                        ])
-                        types = [self.env['res.partner'].browse(item.res_id).type for item in domain]
-                        _logger.warning(f"Types: {types} DANLOF: EKSVIC")
-                        if adress.type in types:
-                            _logger.warning("UPDATING A PARTNER ADRESS: DANLOF: EKSVIC")
-                            for child in target_partner.child_ids:
-                                if child.type == adress.type:
-                                    child.write(target_adress_vals)
-                        else:
-                            _logger.warning("CREATING A PARTNER ADRESS: DANLOF: EKSVIC")
-                            target_adress_vals.update({
-                                "parent_id": target_partner.id,
-                            })
-                            _logger.warning(f"TARGET VALS: ===== {target_adress_vals}")
-                            adress_id = odoo8_conn.env['res.partner'].create(
-                                target_adress_vals
-                            )
-                            _logger.warning(f"EXTERNALLY CREATED ID IS: {f'res_partner_{adress_id}'}")
-                            model.create(
-                                {
-                                    "module": PREFIX,
-                                    "name": f"res_partner_{adress_id}",
-                                    "model": "res.partner",
-                                    "res_id": adress.id,
-                                }
-                            )
+                    # if partner.child_ids:
+                    #     for adress in partner.child_ids.filtered(
+                    #         lambda r: r.type in ["delivery", "invoice"]
+                    #     ):
+                    #         _logger.warning("UPDATING A PARTNER: DANLOF: EKSVIC 4")
+                    #         target_adress_vals = {
+                    #             "name": adress.name,
+                    #             "type": adress.type,
+                    #             "mobile": adress.phone,
+                    #             "email": adress.email,
+                    #             "street": adress.street,
+                    #             "street2": adress.street2,
+                    #             "zip": adress.zip,
+                    #             "city": adress.city,
+                    #             "country_id": target_country[0]
+                    #             if target_country
+                    #             else False,
+                    #             "category_id": [(4, 233, 0)],  # slutkonsument
+                    #             "lang": adress.lang,
+                    #         }
+                    #         domain = model.search([
+                    #                 ('module', '=', PREFIX),
+                    #                 ('res_id', '=', adress.id),
+                    #                 ('model', '=', 'res.partner')
+                    #         ])
+                    #         types = [self.env['res.partner'].browse(item.res_id).type for item in domain]
+                    #         _logger.warning(f"Types: {types} DANLOF: EKSVIC")
+                    #         if adress.type in types:
+                    #             _logger.warning("UPDATING A PARTNER ADRESS: DANLOF: EKSVIC")
+                    #             for child in target_partner.child_ids:
+                    #                 if child.type == adress.type:
+                    #                     child.write(target_adress_vals)
+                    #         else:
+                    #             _logger.warning("CREATING A PARTNER ADRESS: DANLOF: EKSVIC")
+                    #             target_adress_vals.update({
+                    #                 "parent_id": target_partner.id,
+                    #             })
+                    #             _logger.warning(f"TARGET VALS: ===== {target_adress_vals}")
+                    #             adress_id = odoo8_conn.env['res.partner'].create(
+                    #                 target_adress_vals
+                    #             )
+                    #             _logger.warning(f"EXTERNALLY CREATED ID IS: {f'res_partner_{adress_id}'}")
+                    #             model.create(
+                    #                 {
+                    #                     "module": PREFIX,
+                    #                     "name": f"res_partner_{adress_id}",
+                    #                     "model": "res.partner",
+                    #                     "res_id": adress.id,
+                    #                 }
+                    #             )
             else:
                 # ANONYMOUS CHECKOUT PARTNER CREATION START
                 _logger.warning("SOMETHING ELSE HAPPENS HERE")
