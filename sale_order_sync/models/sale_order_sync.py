@@ -81,13 +81,14 @@ class ResUsers(models.Model):
             _logger.warning(f"PARTNER NAME: {partner_name} LOFDAN EKSVIC")
             if partner_name:
                 partner_name = partner_name.split('_')[-1]
-
+                _logger.warning(f"Partner name: {partner_name}")
                 target_partner = False
 
                 target_partner = odoo8_conn.env['res.partner'].browse(
                     int(partner_name)
                 )
 
+                _logger.warning(f"Target partner: {target_partner}")
                 _logger.warning("UPDATING A PARTNER: DANLOF: EKSVIC")
 
                 target_partner.write(target_partner_vals)
