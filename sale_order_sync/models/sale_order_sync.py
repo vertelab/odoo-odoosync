@@ -390,7 +390,7 @@ class SaleOrder(models.Model):
                 ]
             ).name
 
-            sale_order_invoice_type = odoo8_conn.env.ref('__invoice_type.webshop_invoice_type')
+            sale_order_invoice_type = odoo8_conn.env.ref('__invoice_type.webshop_invoice_type').id
             _logger.warning(f"DANLOF Invoice type: {sale_order_invoice_type}");
             
             if self.partner_id.agent_ids:
