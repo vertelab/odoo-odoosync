@@ -383,14 +383,16 @@ class SaleOrder(models.Model):
                     ("model", "=", "res.partner"),
                 ]
             ).name
-            _logger.warning(f"self.partner_shipping_id.id: {self.partner_shipping_id}")
-            _logger.warning(f"partner_shipping_name: {partner_shipping_name}")
             partner_invoice_name = model.search(
                 [
                     ("res_id", "=", self.partner_invoice_id.id),
                     ("model", "=", "res.partner"),
                 ]
             ).name
+
+            sale_order_invoice_type = odoo8_conn.env.ref('__invoice_type.webshop_invoice_type')
+            _logger.warning(f"DANLOF Invoice type: {sale_order_invoice_type}");
+            
             if self.partner_id.agent_ids:
                 agent_name = model.search(
                     [
