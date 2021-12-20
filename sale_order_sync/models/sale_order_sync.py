@@ -442,6 +442,8 @@ class SaleOrder(models.Model):
 
             try:
                 _logger.warning(f'partner_invoice_id: {target_partner_invoice_id} \n partner_shipping_id: {target_partner_shipping_id}')
+
+                #
                 sale_order_vals = {
                     "partner_id": target_partner,
                     "partner_invoice_id": target_partner_invoice_id,
@@ -453,6 +455,7 @@ class SaleOrder(models.Model):
                     "date_order": str(self.date_order),
                     # "pricelist_id": target_pricelist_id,
                     "carrier_id": 32,  # Hardcoded for now
+                    "invoice_type_id": 7, # Hardcoded for now
                     "picking_policy": "one",
                 }
 
