@@ -78,7 +78,6 @@ class ResUsers(models.Model):
                 "category_id": [(4, 233, 0)],  # slutkonsument
                 "lang": partner.lang,
             }
-            _logger.warning(f"PARTNER NAME: {partner_name} LOFDAN EKSVIC")
             if partner_name:
                 partner_name = partner_name.split('_')[-1]
                 target_partner = False
@@ -87,11 +86,7 @@ class ResUsers(models.Model):
                     int(partner_name)
                 )
 
-                _logger.warning("UPDATING A PARTNER: DANLOF: EKSVIC")
-
                 target_partner.write(target_partner_vals)
-
-                _logger.warning("UPDATING A PARTNER: DANLOF: EKSVIC 2")
                 if target_partner:
                     _logger.warning("UPDATING A PARTNER: DANLOF: EKSVIC 3")
                     #_logger.warning(f"partner is : {partner.read()}")
@@ -148,7 +143,6 @@ class ResUsers(models.Model):
                     #             )
             else:
                 # ANONYMOUS CHECKOUT PARTNER CREATION START
-                _logger.warning("SOMETHING ELSE HAPPENS HERE")
                 target_partner_id = odoo8_conn.env["res.partner"].create(
                     target_partner_vals
                 )
@@ -181,7 +175,6 @@ class ResUsers(models.Model):
                     }
                     odoo8_conn.env["res.partner"].create(target_adress_vals)
                     # ANONYMOUS CHECKOUT PARTER CREATION END
-            _logger.warning(db, login, password)
             return (db, login, password)
 
 
@@ -241,8 +234,6 @@ class SaleOrder(models.Model):
                  ("model", "=", "res.partner")]
             ).name
 
-            _logger.warning(f"SALE ORDER PARTERNAME: DANLOF: {partner_name}")
-
             if partner_name:
                 partner_name = partner_name.split('_')[-1]
 
@@ -251,8 +242,6 @@ class SaleOrder(models.Model):
                 target_partner = odoo8_conn.env['res.partner'].browse(
                     int(partner_name)
                 )
-
-                _logger.warning("UPDATING A PARTNER: DANLOF: EKSVIC")
 
                 target_partner.write(target_partner_vals)
 
@@ -292,11 +281,9 @@ class SaleOrder(models.Model):
                             target_adress_vals.update({
                                 "parent_id": target_partner.id,
                             })
-                            _logger.warning(f"TARGET VALS: ===== {target_adress_vals}")
                             adress_id = odoo8_conn.env['res.partner'].create(
                                 target_adress_vals
                             )
-                            _logger.warning(f"ADDRESS ID IS: {f'res_partner_{adress_id}'}")
                             model.create(
                                 {
                                     "module": PREFIX,
@@ -376,7 +363,6 @@ class SaleOrder(models.Model):
                     }
                 )
             
-            _logger.warning(f"invoice ID: {self.partner_invoice_id.id}")
             partner_shipping_name = model.search(
                 [
                     ("res_id", "=", self.partner_shipping_id.id ),
@@ -391,6 +377,7 @@ class SaleOrder(models.Model):
             ).name
 
             sale_order_invoice_type = odoo8_conn.env.ref('__invoice_type.webshop_invoice_type').id
+            _logger.warning(f"invoice ID: {self.partner_invoice_id.id}")
             _logger.warning(f"DANLOF Invoice type: {sale_order_invoice_type}");
             
             if self.partner_id.agent_ids:
@@ -443,8 +430,6 @@ class SaleOrder(models.Model):
                 return False
 
             try:
-                _logger.warning(f'partner_invoice_id: {target_partner_invoice_id} \n partner_shipping_id: {target_partner_shipping_id}')
-
                 #
                 sale_order_vals = {
                     "partner_id": target_partner,
