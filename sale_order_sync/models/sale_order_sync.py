@@ -377,8 +377,6 @@ class SaleOrder(models.Model):
             ).name
 
             sale_order_invoice_type = odoo8_conn.env.ref('__invoice_type.webshop_invoice_type').id
-            _logger.warning(f"invoice ID: {self.partner_invoice_id.id}")
-            _logger.warning(f"DANLOF Invoice type: {sale_order_invoice_type}");
             
             if self.partner_id.agent_ids:
                 agent_name = model.search(
@@ -442,7 +440,7 @@ class SaleOrder(models.Model):
                     "date_order": str(self.date_order),
                     # "pricelist_id": target_pricelist_id,
                     "carrier_id": 32,  # Hardcoded for now
-                    "invoice_type_id": 7, # Hardcoded for now
+                    "invoice_type_id": sale_order_invoice_type, # Hardcoded for now
                     "picking_policy": "one",
                 }
 
