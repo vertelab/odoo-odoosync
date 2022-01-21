@@ -1,6 +1,10 @@
+
+
+import random
+import logging
+
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
-import logging
 
 _logger = logging.getLogger(__name__)
 try:
@@ -49,7 +53,7 @@ class ResUsers(models.Model):
         _logger.info("Syncronizing res.users...")
 
         odoo8_conn = self._connect_to_host()
-        
+
         if odoo8_conn:
             db, login, password = super().signup(values=values, token=token)
             partner = self.env['res.users'].search([
@@ -197,6 +201,15 @@ class SaleOrder(models.Model):
             _logger.warning(f"Could not connect to host. {e}")
 
     def sync_sale_order(self):
+        action_id = hex(random.randint(1, 2**32))[2:]  # For log easy-of-use
+        _logger.info("O2O-sync: Order sync ID: {} starting - Sale Order: {}".format(
+            action_id,
+            self
+        ))
+        self._sync_sale_order()
+        _logger.info("O2O-sync: Order sync ID: {} processed".format(action_id))
+
+    def _sync_sale_order(self):
         """Connects to a remote odoo server and syncronizes the sale order"""
         _logger.info("Syncronizing sale.order...")
 
@@ -362,7 +375,7 @@ class SaleOrder(models.Model):
                         "res_id": self.partner_id.id,
                     }
                 )
-            
+
             partner_shipping_name = model.search(
                 [
                     ("res_id", "=", self.partner_shipping_id.id ),
@@ -377,7 +390,7 @@ class SaleOrder(models.Model):
             ).name
 
             sale_order_invoice_type = odoo8_conn.env.ref('__invoice_type.webshop_invoice_type').id
-            
+
             if self.partner_id.agent_ids:
                 agent_name = model.search(
                     [
