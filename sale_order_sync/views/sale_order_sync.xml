@@ -9,9 +9,9 @@
             <field name="state">code</field>
             <field name="code">
 if records:
-    records.sync_sale_order()
-#    for rec in records:
-#        rec.sync_sale_order()
+#    records.sync_sale_order()
+    for rec in records:
+        rec.sync_sale_order()
 else:
     raise Warning("Run this action on at least one record.")
             </field>
