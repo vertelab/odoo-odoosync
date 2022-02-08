@@ -33,7 +33,7 @@ class ResUsers(models.Model):
             return conn
 
         except Exception as e:
-            _logger.warning(f"Could not connect to host. {e}")
+            _logger.warning(f"O2O-sync: Could not connect to remote Odoo {e}")
 
     def create_external_id(self, model, partner_id, remote_id):
         """Expected external ID(odoo14) of remote model record(odoo8)."""
@@ -50,7 +50,7 @@ class ResUsers(models.Model):
 
     def signup(self, values, token=None):
         """Connects to a remote odoo8 server and syncronize/create account"""
-        _logger.info("Syncronizing res.users...")
+        _logger.info("O2O-sync: Syncronizing res.users...")
 
         odoo8_conn = self._connect_to_host()
 
@@ -155,7 +155,7 @@ class ResUsers(models.Model):
                     self.create_external_id(
                         'res.partner', partner.id, target_partner_id)
                 else:
-                    _logger.warning(f'Target Partner ID IS FALSE, VERY BAD!')
+                    _logger.warning(f'O2O-sync: Target Partner ID IS FALSE, VERY BAD!')
 
                 # sync adresses for the customer
                 for adress in partner.child_ids.filtered(
@@ -198,7 +198,7 @@ class SaleOrder(models.Model):
             return conn
 
         except Exception as e:
-            _logger.warning(f"Could not connect to host. {e}")
+            _logger.warning(f"O2O-sync: Could not connect to host. {e}")
 
     def sync_sale_order(self):
         action_id = hex(random.randint(1, 2**32))[2:]  # For log easy-of-use
@@ -209,6 +209,48 @@ class SaleOrder(models.Model):
         self._sync_sale_order()
         _logger.info("O2O-sync: Order sync ID: {} processed".format(action_id))
 
+    def sale_order_on_remote(self, conn):
+        '''
+        Return RecordSet of sale orders in self that are on remote.
+
+        Parameters
+        ==========
+        conn : OdooRPC-connection
+            Open RPC connection to remote.
+
+        Returns
+        =======
+        RecordSet[sale.order] :
+            Subset of self who is found on remote
+        '''
+        on_remote = self.filtered(
+            lambda SO: bool(conn.env["sale.order"].search(
+                [("name",'=',SO.name)])))
+        return on_remote
+
+    def sync_sanity_check(self, conn):
+        '''
+        General sanity check on self if the sync should be done with conn.
+
+        Run before any actual sync functionality starts.
+        '''
+        # Don't sync if records are on remote.
+        # TODO : Decide if the rest should be synced but probably not.
+        on_remote = self.sale_order_on_remote(conn)
+        if on_remote:
+            raise ValidationError(
+                "O2O-sync: Sale Order(s) {} already on remote."\
+                " Sync not started".format(on_remote.mapped("name")))
+        # Dont sync i state is not 'done'.
+        sync_states = ["sale", "sent", "done"]
+        not_done = self.filtered(
+            lambda SO: SO.state not in sync_states)
+        if not_done:
+            raise ValidationError(
+                "O2O-sync: Sale Order(s) {} not in {}."\
+                " Sync not started".format(not_done.mapped("name"),
+                                           sync_states))
+
     def _sync_sale_order(self):
         """Connects to a remote odoo server and syncronizes the sale order"""
         _logger.info("Syncronizing sale.order...")
@@ -218,6 +260,8 @@ class SaleOrder(models.Model):
         target_country = odoo8_conn.env["res.country"].search(
             [("code", "=", self.partner_id.country_id.code)], limit=1
         )
+
+        self.sync_sanity_check(odoo8_conn)
 
         # ANONYMOUS CHECKOUT PARTER CREATION START
         target_partner_vals = {
@@ -234,7 +278,7 @@ class SaleOrder(models.Model):
             "lang": self.partner_id.lang,
         }
 
-        if odoo8_conn and self.state in ["sale", "sent"]:
+        if odoo8_conn : # Dealt with via sanity check: and self.state in ["sale", "sent"]
             model = self.env["ir.model.data"]
             pricelist_name = model.search(
                 [
@@ -285,12 +329,12 @@ class SaleOrder(models.Model):
                         ])
                         types = [self.env['res.partner'].browse(item.res_id).type for item in domain]
                         if adress.type in types:
-                            _logger.warning("UPDATING A PARTNER ADRESS: DANLOF: EKSVIC")
+                            _logger.info("O2O-sync: Creating partner record on remote.")
                             for child in target_partner.child_ids:
                                 if child.type == adress.type:
                                     child.write(target_adress_vals)
                         else:
-                            _logger.warning("CREATING A PARTNER ADRESS: DANLOF: EKSVIC")
+                            _logger.info("O2O-sync: Updating partner record on remote.")
                             target_adress_vals.update({
                                 "parent_id": target_partner.id,
                             })
@@ -457,7 +501,7 @@ class SaleOrder(models.Model):
                     "picking_policy": "one",
                 }
 
-                _logger.warning(f"THIS IS SALEORDERVALS: {sale_order_vals}")
+                _logger.warning(f"O2O-sync: Sale Order values: {sale_order_vals}")
                 sale_order_id = odoo8_conn.env["sale.order"].create(
                     sale_order_vals)
                 line_ids = []
@@ -492,7 +536,7 @@ class SaleOrder(models.Model):
 
                     if not product_id:
                         _logger.error(
-                            f"Product does not exist in other DB {line.product_id.default_code} {line.product_id.name}"
+                            f"O2O-sync: Product does not exist in other DB {line.product_id.default_code} {line.product_id.name}"
                         )
                         raise Exception
 
@@ -539,7 +583,7 @@ class SaleOrder(models.Model):
                 # change order to state done to indicate that it has been
                 # transfered correctly
                 self.state = "done"
-                _logger.info("Order sent.")
+                _logger.info("O2O-sync: Order sent.")
 
             except Exception as e:
                 # Orders that failed sync are left in state "sale".
