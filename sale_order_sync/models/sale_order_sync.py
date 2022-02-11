@@ -202,9 +202,9 @@ class SaleOrder(models.Model):
 
     def sync_sale_order(self):
         action_id = hex(random.randint(1, 2**32))[2:]  # For log easy-of-use
-        _logger.info("O2O-sync: Order sync ID: {} starting - Sale Order: {}".format(
+        _logger.info("O2O-sync: Order sync ID: {} starting - Sale Order(s): {}".format(
             action_id,
-            self
+            self.mapped("name")
         ))
         self._sync_sale_order()
         _logger.info("O2O-sync: Order sync ID: {} processed".format(action_id))
@@ -270,6 +270,7 @@ class SaleOrder(models.Model):
             Sanity checks of SO and connection are expected to have been done.
         '''
         self.ensure_one()
+        _logger.info("O2O-sync: Syncing Sale Order: {}".format( self.name))
 
         target_country = target.env["res.country"].search(
             [("code", "=", self.partner_id.country_id.code)], limit=1

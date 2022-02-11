@@ -9,9 +9,9 @@
             <field name="state">code</field>
             <field name="code">
 if records:
-#    records.sync_sale_order()
-    for rec in records:
-        rec.sync_sale_order()
+    records.sync_sale_order()
+#    for rec in records:
+#        rec.sync_sale_order()
 else:
     raise Warning("Run this action on at least one record.")
             </field>
@@ -25,12 +25,11 @@ else:
             <field name="action_server_id" ref="sale_order_sync_action"/>
             <field name="filter_pre_domain">[["state","=","draft"]]</field>
             <field name="filter_domain">[["state","=","sale"]]</field>
-            <field name="state">code</field>
+<!--            <field name="state">code</field>
             <field name="code">
 for rec in records:
     rec.sync_sale_order()
-            </field>
+</field>-->
         </record>
-
     </data>
 </odoo>
