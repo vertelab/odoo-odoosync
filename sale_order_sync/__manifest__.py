@@ -24,13 +24,14 @@
     "author": "Vertel",
     "category": "Sales",
     "description": """
+14.0.1.4.0 - Refactoring and added dependency
 14.0.1.2.0 - Added sync of multiple adresses for res.partners.
 14.0.1.1.0 - Added sync of res.partners.
 14.0.1.0.1 - Added a call to check_order_stock
 Synchronizes sale orders from Odoo 14 to Odoo 8
 using triggers.
 """,
-    "depends": ["sale", "base_automation"],
+    "depends": ["sale", "base_automation", 'sale_commission'],
     "external_dependencies": {
         "python": ["odoorpc"],
     },
