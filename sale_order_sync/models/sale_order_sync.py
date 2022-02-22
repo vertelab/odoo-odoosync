@@ -16,7 +16,79 @@ except ImportError:
 
 PREFIX = "__ma_import__"
 
+def get_remote_id_from_xid(xid):
+    '''
+    Get remote id from synked external id.
 
+    Parameters
+    ==========
+    xid : str
+        External ID as used by ref(...)
+
+    Returns
+    =======
+    int :
+
+    '''
+    if not xid.startswith(PREFIX):
+        raise ValueError(f"External id: {xid} doesn't start with {PREFIX}")
+    return int(xid.split('_')[-1])
+
+def get_remote_ids_from_rs(env,recordset,remote_model=None):
+    '''
+    Parameters
+    ==========
+    env : Environment
+        Odoo Environment to use. Eg self.env, recordset.env
+    recordset : RecordSet
+        RecordSet to get id's from.
+
+    Returns
+    =======
+    Dict[int->int] :
+        Dict mapping local id's to ids on remote Odoo. Records with no remote
+        record are ignored.
+    '''
+    model = recordset._name
+    if remote_model:
+        model = remote_model
+    ids = recordset.mapped('id')
+    imd = env["ir.model.data"].search([('module',"=",PREFIX),
+                                       ("model",'=',model),
+                                       ("res_id","in",ids)
+                                       ])
+    _logger.debug("O2O-sync: Recordset {} has external IDs {}".format(
+        recordset,imd))
+    if not imd:
+        return {}
+    else:
+        imd = imd.mapped( lambda r: (r.res_id, int(r.name.split('_')[-1])) )
+        idmap = { local:remote for local, remote in imd }
+        _logger.info(f"O2O-sync: Model: {model} ID-map: {idmap}")
+        return idmap
+    # Shouldn't get here.
+    return {}
+
+def get_remote_id_from_rs(env,recordset,remote_model=None):
+    '''
+    Parameters
+    ==========
+    env : Environment
+        Odoo Environment to use.
+    recordset : RecordSet
+        RecordSet of length 1 to get an id from.
+
+    Returns
+    =======
+    int :
+        id on remote Odoo or None
+    '''
+    if len(recordset) == 1:
+        i =  get_remote_ids_from_rs(env,recordset,remote_model)
+        return i[recordset.id] if i else None
+    else:
+        raise ValueError("RecordSet need to be of length 1."
+                         " For longer RS us get_remote_ids_from_rs")
 class ResUsers(models.Model):
     _inherit = 'res.users'
 
@@ -206,6 +278,15 @@ class SaleOrder(models.Model):
             action_id,
             self.mapped("name")
         ))
+
+        # Borrowing this function for test purposes.
+        _logger.warn("MyTag: Got here!")
+        _logger.warn("MyTag: {}".format(get_remote_ids_from_rs(self.env, self))) # All self's on remote = None
+        _logger.warn("MyTag: {}".format(get_remote_ids_from_rs(self.env, self,"account.tax"))) # Unknown, probably nothing
+        _logger.warn("MyTag: {}".format(get_remote_ids_from_rs(self.env, self.env["account.tax"].search([]),"account.tax"))) # Sync taxes
+        _logger.warn("MyTag: {}".format(get_remote_id_from_rs(self.env, self[0]))) # One self on remote
+        _logger.critical("MyTag: REMOVE THIS RETURN STATEMENT")
+        return
         self._sync_sale_order()
         _logger.info("O2O-sync: Order sync ID: {} processed".format(action_id))
 
