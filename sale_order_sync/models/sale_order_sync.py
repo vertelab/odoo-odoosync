@@ -28,6 +28,7 @@ def get_remote_id_from_xid(xid):
     Returns
     =======
     int :
+        Extracted remote ID from synced external id.
 
     '''
     if not xid.startswith(PREFIX):
@@ -36,12 +37,18 @@ def get_remote_id_from_xid(xid):
 
 def get_remote_ids_from_rs(env,recordset,remote_model=None):
     '''
+    Dev-note: Rationale for returning dict; Not all entries in the Recordset
+            might have remote id's.
+
     Parameters
     ==========
     env : Environment
         Odoo Environment to use. Eg self.env, recordset.env
     recordset : RecordSet
         RecordSet to get id's from.
+    remote_model : str
+        (Optional) Override for recordset._name . Useful if the model different
+        names on the remote Odoo installation.
 
     Returns
     =======
@@ -81,7 +88,7 @@ def get_remote_id_from_rs(env,recordset,remote_model=None):
     Returns
     =======
     int :
-        id on remote Odoo or None
+        id on remote Odoo or None if no corresponding id is found.
     '''
     if len(recordset) == 1:
         i =  get_remote_ids_from_rs(env,recordset,remote_model)
@@ -279,14 +286,6 @@ class SaleOrder(models.Model):
             self.mapped("name")
         ))
 
-        # Borrowing this function for test purposes.
-        _logger.warn("MyTag: Got here!")
-        _logger.warn("MyTag: {}".format(get_remote_ids_from_rs(self.env, self))) # All self's on remote = None
-        _logger.warn("MyTag: {}".format(get_remote_ids_from_rs(self.env, self,"account.tax"))) # Unknown, probably nothing
-        _logger.warn("MyTag: {}".format(get_remote_ids_from_rs(self.env, self.env["account.tax"].search([]),"account.tax"))) # Sync taxes
-        _logger.warn("MyTag: {}".format(get_remote_id_from_rs(self.env, self[0]))) # One self on remote
-        _logger.critical("MyTag: REMOVE THIS RETURN STATEMENT")
-        return
         self._sync_sale_order()
         _logger.info("O2O-sync: Order sync ID: {} processed".format(action_id))
 
@@ -343,7 +342,7 @@ class SaleOrder(models.Model):
             for r in self:
                 r._sync_single_sale_order(odoo8_conn)
         else:
-            _logger.info("No connection or sale order")
+            _logger.info("No connection or no sale order")
 
     def _sync_single_sale_order(self,target):
         '''
@@ -576,6 +575,7 @@ class SaleOrder(models.Model):
             _logger.exception(e)
             return False
 
+        # TODO: Shop try into smaller reasonable pieces.
         try:
             #
             sale_order_vals = {
