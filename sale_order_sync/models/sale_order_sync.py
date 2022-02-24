@@ -641,6 +641,18 @@ class SaleOrder(models.Model):
                     "product_id": product_id[0],
                     "product_uom_qty": line.product_uom_qty,
                 }
+
+                # Sync tax if possible.
+                # Assume only one tax rate:
+                remote_tax_id = get_remote_id_from_rs(self.env, line.tax_id) if line.tax_id else None
+                if remote_tax_id:
+                    _logger.info("O2O-sync: Remote tax id found."
+                                 " Local->Remote : "
+                                 f"{line.tax_id}->{remote_tax_id}")
+                    line_vals["tax_id"] = [(6, 0, (remote_tax_id,) )]
+                else:
+                    _logger.warn("O2O-sync: No remote tax id found.")
+
                 sale_order_line_id = target.env["sale.order.line"].create(
                     line_vals
                 )
@@ -680,4 +692,5 @@ class SaleOrder(models.Model):
         except Exception as e:
             # Orders that failed sync are left in state "sale".
             # TODO: add better handling
+            _logger.error("O2O-sync: Error occurred during sync.")
             _logger.exception(e)
