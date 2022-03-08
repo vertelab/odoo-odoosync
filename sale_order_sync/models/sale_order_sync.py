@@ -692,7 +692,7 @@ class SaleOrder(models.Model):
 
         except Exception as e:
             # Orders that failed sync are left in state "sale".
-            sale_order.message_post(body=e)
+            sale_order.message_post(body=str(e))
             # TODO add better handling
             _logger.error("O2O-sync: Error occurred during sync.")
             _logger.exception(e)
