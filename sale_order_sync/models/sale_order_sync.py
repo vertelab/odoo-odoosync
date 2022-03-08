@@ -379,7 +379,7 @@ class SaleOrder(models.Model):
         ).name
         partner_name = model.search(
             [("res_id", "=", self.partner_id.id),
-             ("module","=",PREFIX)
+             ("module","=",PREFIX),
              ("model", "=", "res.partner")]
         ).name
 
