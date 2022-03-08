@@ -315,7 +315,7 @@ class SaleOrder(models.Model):
         Run before any actual sync functionality starts.
         '''
         # Don't sync if records are on remote.
-        # TODO : Decide if the rest should be synced but probably not.
+        # TODO Decide if the rest should be synced but probably not.
         on_remote = self.sale_order_on_remote(conn)
         if on_remote:
             raise ValidationError(
@@ -677,7 +677,9 @@ class SaleOrder(models.Model):
             #         "Sale order without agents data! %s" % sale_order.name
             #     )
             # Confirm the sale order in target
-            sale_order.check_order_stock()
+            # TODO Investigate if we can catch the error from the line below, and print it as a message for the task.
+            is_in_stock = sale_order.check_order_stock()
+            _logger.warning(f'Is product in stock? {is_in_stock}')
             # Use this line if we want to send email.
             # Currently we do not want to.
             # sale_order.with_context(send_email=True).action_button_confirm()
@@ -692,6 +694,6 @@ class SaleOrder(models.Model):
 
         except Exception as e:
             # Orders that failed sync are left in state "sale".
-            # TODO: add better handling
+            # TODO add better handling
             _logger.error("O2O-sync: Error occurred during sync.")
             _logger.exception(e)
