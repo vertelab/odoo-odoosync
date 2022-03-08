@@ -676,10 +676,8 @@ class SaleOrder(models.Model):
             #     _logger.warning(
             #         "Sale order without agents data! %s" % sale_order.name
             #     )
-            # Confirm the sale order in target
-            # TODO Investigate if we can catch the error from the line below, and print it as a message for the task.
-            is_in_stock = sale_order.check_order_stock()
-            _logger.warning(f'Is product in stock? {is_in_stock}')
+            # Confirm the sale order in target 
+            sale_order.check_order_stock()
             # Use this line if we want to send email.
             # Currently we do not want to.
             # sale_order.with_context(send_email=True).action_button_confirm()
@@ -694,6 +692,7 @@ class SaleOrder(models.Model):
 
         except Exception as e:
             # Orders that failed sync are left in state "sale".
+            sale_order.message_post(body=e)
             # TODO add better handling
             _logger.error("O2O-sync: Error occurred during sync.")
             _logger.exception(e)
