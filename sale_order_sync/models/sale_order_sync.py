@@ -285,7 +285,6 @@ class SaleOrder(models.Model):
             action_id,
             self.mapped("name")
         ))
-
         self._sync_sale_order()
         _logger.info("O2O-sync: Order sync ID: {} processed".format(action_id))
 
@@ -319,7 +318,7 @@ class SaleOrder(models.Model):
         on_remote = self.sale_order_on_remote(conn)
         if on_remote:
             raise ValidationError(
-                "O2O-sync: Sale Order(s) {} already on remote."\
+                "Sale Order(s) {} already on remote."\
                 " Sync not started".format(on_remote.mapped("name")))
         # Dont sync i state is not 'done'.
         sync_states = ["sale", "sent", "done"]
@@ -327,7 +326,7 @@ class SaleOrder(models.Model):
             lambda SO: SO.state not in sync_states)
         if not_done:
             raise ValidationError(
-                "O2O-sync: Sale Order(s) {} not in {}."\
+                "Sale Order(s) {} not in {}."\
                 " Sync not started".format(not_done.mapped("name"),
                                            sync_states))
 
@@ -338,11 +337,23 @@ class SaleOrder(models.Model):
         odoo8_conn = self._connect_to_host()
 
         if odoo8_conn : # Dealt with via sanity check: and self.state in ["sale", "sent"]
-            self.sync_sanity_check(odoo8_conn)
-            for r in self:
-                r._sync_single_sale_order(odoo8_conn)
+            # Not catching ValidationErrors cause problems if other errors occur
+            # during shop checkout.
+            if self.env.context.get("sync_catch_exceptions",False):
+                _logger.debug(f"O2O-sync: Silent ValidationErrors")
+                try:
+                    self.sync_sanity_check(odoo8_conn)
+                except ValidationError as e:
+                    _logger.warning(f"O2O-sync: Sanity check failed: {e}")
+                else:
+                    for r in self:
+                        r._sync_single_sale_order(odoo8_conn)
+            else:
+                self.sync_sanity_check(odoo8_conn)
+                for r in self:
+                    r._sync_single_sale_order(odoo8_conn)
         else:
-            _logger.info("No connection or no sale order")
+            _logger.info("O2O-sync: No connection or no sale order")
 
     def _sync_single_sale_order(self,target):
         '''
@@ -656,7 +667,7 @@ class SaleOrder(models.Model):
                                  f"{line.tax_id}->{remote_tax_id}")
                     line_vals["tax_id"] = [(6, 0, (remote_tax_id,) )]
                 else:
-                    _logger.warn("O2O-sync: No remote tax id found.")
+                    _logger.warning("O2O-sync: No remote tax id found.")
 
                 sale_order_line_id = target.env["sale.order.line"].create(
                     line_vals
