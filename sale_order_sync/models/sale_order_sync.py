@@ -512,15 +512,19 @@ class SaleOrder(models.Model):
                 }
             )
 
+        # Should exist as it either did exist to start with or got created
+        # above
         partner_shipping_name = model.search(
             [
                 ("res_id", "=", self.partner_shipping_id.id ),
+                ("module","=",PREFIX),
                 ("model", "=", "res.partner"),
             ]
         ).name
         partner_invoice_name = model.search(
             [
                 ("res_id", "=", self.partner_invoice_id.id),
+                ("module","=",PREFIX),
                 ("model", "=", "res.partner"),
             ]
         ).name
@@ -676,7 +680,7 @@ class SaleOrder(models.Model):
             #     _logger.warning(
             #         "Sale order without agents data! %s" % sale_order.name
             #     )
-            # Confirm the sale order in target 
+            # Confirm the sale order in target
             sale_order.check_order_stock()
             # Use this line if we want to send email.
             # Currently we do not want to.
