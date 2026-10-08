@@ -2,7 +2,7 @@
 ##############################################################################
 #
 #    Odoo, Open Source Enterprise Management Solution, third party addon
-#    Copyright (C) 2021 Vertel AB (<http://vertel.se>).
+#    Copyright (C) 2021 Vertel Sverige AB (<http://vertel.se>).
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -20,7 +20,7 @@
 ##############################################################################
 {
     "name": "Sale Order Sync",
-    "version": "14.0.1.3.0",
+    "version": "18.0.1.3.0",
     "author": "Vertel",
     "category": "Sales",
     "description": """
